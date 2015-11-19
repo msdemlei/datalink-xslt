@@ -1,5 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<!-- A stylesheet to turn IVOA datalink documents 
+(http://www.ivoa.net/documents/DataLink) into HTML pages.
+
+Assumptions on document content beyond conforming datalink content:
+
+(1) null value of content_length is -1
+
+
+Copyright 2015 The GAVO Project, Moenchhofstr. 12-14, D-69120 Heidelberg;
+This code can be used under the GNU GPL; see 
+http://www.gnu.org/licenses/gpl.html to learn about your rights.
+-->
+
+
 <xsl:stylesheet
     xmlns:vot="http://www.ivoa.net/xml/VOTable/v1.2"
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
@@ -129,12 +143,33 @@
                </xsl:attribute>Link</a>
     </xsl:template>
 
+    <xsl:template name="format-file-size">
+        <xsl:param name="file-size"/>
+        <xsl:choose>
+            <xsl:when test="$file-size&lt;2000">
+                <xsl:value-of select="$file-size"/> Bytes</xsl:when>
+            <xsl:when test="$file-size&lt;1500000">
+                <xsl:value-of select="round($file-size div 102.4) div 10"
+                    /> kiB</xsl:when>
+            <xsl:when test="$file-size&lt;1500000000">
+                <xsl:value-of select="round($file-size div 10485.76) div 100"
+                    /> MiB</xsl:when>
+            <xsl:when test="$file-size&lt;20e9">
+                <xsl:value-of select="round($file-size div 10737418.24) div 100"
+                    /> GiB</xsl:when>
+            <xsl:otherwise>
+                <xsl:value-of select="$file-size"/> Bytes</xsl:otherwise>
+        </xsl:choose>
+    </xsl:template>
+
     <xsl:template match="vot:TD" mode="content_length">
-            <xsl:if test=".">
-                 <span class="size">
-                      (<xsl:value-of select="."/> Bytes)
-                  </span>
-            </xsl:if>
+        <xsl:if test=". and number(.)!=-1">
+            <span class="size">
+                (<xsl:call-template name="format-file-size">
+                    <xsl:with-param name="file-size" select="number(.)"/>
+                </xsl:call-template>)
+            </span>
+        </xsl:if>
     </xsl:template>
 
     <xsl:template match="vot:TD" mode="error_message">
