@@ -6,6 +6,8 @@
 Assumptions on document content beyond conforming datalink content:
 
 (1) null value of content_length is -1
+(2) VOTable namespace is 1.2 (as long as you know what version you're handing
+    out, just fix xmlns:vot below)
 
 
 Copyright 2015 The GAVO Project, Moenchhofstr. 12-14, D-69120 Heidelberg;
@@ -20,8 +22,6 @@ http://www.gnu.org/licenses/gpl.html to learn about your rights.
    	xmlns="http://www.w3.org/1999/xhtml"
     version="1.0">
    
-   	<xsl:include href="dachs-xsl-config.xsl"/>
-    
     <!-- ############################################## Global behaviour -->
 
     <xsl:output method="xml" 
@@ -183,6 +183,146 @@ http://www.gnu.org/licenses/gpl.html to learn about your rights.
                     <xsl:value-of select="."/>
             </p>
     </xsl:template>
+
+    <!-- ################################### service interface -->
+
+    <xsl:template match="vot:RESOURCE" utype="adhoc:service">
+        <xsl:if test="vot:PARAM[@name='standardID']/@value=
+           'ivo://ivoa.net/std/SODA#sync-1.0'">
+            <form class="service-interface" method="GET">
+                <xsl:attribute name="action">
+                    <xsl:value-of select="vot:PARAM[@name='accessURL']/@value"/>
+                </xsl:attribute>
+                <dl class="inputpars">
+                    <xsl:apply-templates select="vot:GROUP[@name='inputParams']"
+                        mode="build-inputs"/>
+                </dl>
+                <input type="submit" value="Retrieve data"/>
+            </form>
+        </xsl:if>
+    </xsl:template>
+
+    <!-- **vot:PARAM -> html:input translation**: we match with various
+        templates and control conflicts through priority.  Please
+        sort rules by descending priority. 
+        
+        Priorities >=200 are for protocol-specified cases.
+        Priorities ]100, 200[ are for 3-factor semantics 
+        Priorities <=100 are for heuristics. -->
+
+
+    <!-- params with a value always become hidden -->
+    <xsl:template match="vot:PARAM[@value!='']" mode="build-inputs"
+            priority="200">
+        <input type="hidden">
+            <xsl:attribute name="name">
+                <xsl:value-of select="@name"/>
+            </xsl:attribute>
+            <xsl:attribute name="value">
+                <xsl:value-of select="@value"/>
+            </xsl:attribute>
+        </input>
+    </xsl:template>
+
+    <!-- interval-valued params get an interval-valued placeholder -->
+
+    <xsl:template match="vot:PARAM[@xtype='interval']" mode="build-inputs"
+            priority="100">
+        <dt><xsl:value-of select="@name"/></dt>
+        <dd>
+            <input type="text" class="interval-input">
+                <xsl:attribute name="name">
+                    <xsl:value-of select="@name"/>
+                </xsl:attribute>
+                <xsl:attribute name="placeholder">
+                    <xsl:value-of select="vot:VALUES/vot:MIN/@value"/>
+                    <xsl:text> </xsl:text>
+                    <xsl:value-of select="vot:VALUES/vot:MAX/@value"/>
+                </xsl:attribute>
+            </input>
+            <p class="range">An interval (space-separated pair of numbers),
+                where the limits have to be between
+                <span class="min">
+                    <xsl:value-of select="vot:VALUES/vot:MIN/@value"/>
+                </span>
+                and
+                <span class="max">
+                    <xsl:value-of select="vot:VALUES/vot:MAX/@value"/>
+                </span>
+            </p>
+            <p class="param-description">
+                <xsl:value-of select="vot:DESCRIPTION"/>
+            </p>
+        </dd>
+    </xsl:template>
+
+    <!-- ... params with options become a select box.  Yes, this
+    collides with the interval priority.  We'll resolve this when
+    we see an interval-valued enumerated parameter. -->
+
+    <xsl:template match="vot:PARAM[vot:VALUES/vot:OPTION]" mode="build-inputs"
+            priority="100">
+        <dt><xsl:value-of select="@name"/></dt>
+        <dd>
+            <select multiple="multiple">
+                <xsl:attribute name="name">
+                    <xsl:value-of select="@name"/>
+                </xsl:attribute>
+                <xsl:apply-templates select="vot:VALUES" mode="build-inputs"/>
+            </select>
+            <p class="param-description">
+                <xsl:value-of select="vot:DESCRIPTION"/>
+            </p>
+        </dd>
+    </xsl:template>
+
+    <xsl:template match="vot:OPTION" mode="build-inputs">
+        <option>
+            <xsl:attribute name="value">
+                <xsl:value-of select="@value"/>
+            </xsl:attribute>
+            <xsl:choose>
+                <xsl:when test="@name">
+                    <xsl:value-of select="@name"/>
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:value-of select="."/>
+                </xsl:otherwise>
+            </xsl:choose>
+        </option>
+    </xsl:template>
+
+    <!-- ...non-interval params having min and max get pre-filled with the
+        min -->
+
+    <xsl:template match="vot:PARAM[vot:VALUES/vot:MIN]" mode="build-inputs"
+        priority="50">
+        <dt><xsl:value-of select="@name"/></dt>
+        <dd>
+            <input type="text">
+                <xsl:attribute name="name">
+                    <xsl:value-of select="@name"/>
+                </xsl:attribute>
+                <xsl:attribute name="placeholder">
+                    <xsl:value-of select="vot:VALUES/vot:MIN/@value"/>
+                </xsl:attribute>
+            </input>
+            <p class="range">A value between
+                <span class="min">
+                    <xsl:value-of select="vot:VALUES/vot:MIN/@value"/>
+                </span>
+                and
+                <span class="max">
+                    <xsl:value-of select="vot:VALUES/vot:MAX/@value"/>
+                </span>
+            </p>
+            <p class="param-description">
+                <xsl:value-of select="vot:DESCRIPTION"/>
+            </p>
+        </dd>
+    </xsl:template>
+
+
 
 
     <!-- ################################### utility, top-level -->
