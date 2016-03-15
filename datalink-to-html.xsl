@@ -200,10 +200,10 @@ http://www.gnu.org/licenses/gpl.html to learn about your rights.
                     <input type="submit" value="Retrieve data"
                         style="width:14em;height:8ex"/>
                 </div>
-                <dl class="inputpars">
+                <div class="inputpars">
                     <xsl:apply-templates select="vot:GROUP[@name='inputParams']"
                         mode="build-inputs"/>
-                </dl>
+                </div>
             </form>
         </xsl:if>
     </xsl:template>
@@ -228,28 +228,24 @@ http://www.gnu.org/licenses/gpl.html to learn about your rights.
     -->
 
     <xsl:template name="format-an-input-key">
-        <xsl:param name="key"/>
         <xsl:param name="typedesc"/>
         <xsl:param name="widget"/>
-        <xsl:param name="description"/>
-        <xsl:param name="unit"/>
-        <xsl:param name="ucd"/>
         <div>
             <xsl:attribute name="class">
-                <xsl:value-of select="concat('input ', $key, '-', 
-                    $unit, '-', $ucd)"/>
+                <xsl:value-of select="concat('input ', @name, '-', 
+                    @unit, '-', @ucd)"/>
             </xsl:attribute>
             <p class="input-header">
-                <span class="param-name"><xsl:copy-of select="$key"/></span>
+                <span class="param-name"><xsl:value-of select="@name"/></span>
                 <xsl:text> </xsl:text>
                 <span class="typedesc"><xsl:copy-of select="$typedesc"/></span>
             </p>
             <p class="widget">
                 <xsl:copy-of select="$widget"
                     />&#xa0;<span class="unit">
-                <xsl:copy-of select="$unit"/></span></p>
+                <xsl:value-of select="@unit"/></span></p>
             <p class="param-description">
-                <xsl:copy-of select="$description"/>
+                <xsl:copy-of select="vot:DESCRIPTION"/>
             </p>
         </div>
     </xsl:template>
@@ -272,9 +268,6 @@ http://www.gnu.org/licenses/gpl.html to learn about your rights.
     <xsl:template match="vot:PARAM[@xtype='interval']" mode="build-inputs"
             priority="100">
         <xsl:call-template name="format-an-input-key">
-            <xsl:with-param name="key">
-                <xsl:value-of select="@name"/>
-            </xsl:with-param>
             <xsl:with-param name="typedesc">An interval 
                 (space-separated pair of numbers),
                 where the limits have to be between
@@ -298,15 +291,6 @@ http://www.gnu.org/licenses/gpl.html to learn about your rights.
                     </xsl:attribute>
                 </input>
             </xsl:with-param>
-            <xsl:with-param name="description">
-                <xsl:value-of select="vot:DESCRIPTION"/>
-            </xsl:with-param>
-            <xsl:with-param name="ucd">
-                <xsl:value-of select="@ucd"/>
-            </xsl:with-param>
-            <xsl:with-param name="unit">
-                <xsl:value-of select="@unit"/>
-            </xsl:with-param>
         </xsl:call-template>
     </xsl:template>
 
@@ -317,9 +301,6 @@ http://www.gnu.org/licenses/gpl.html to learn about your rights.
     <xsl:template match="vot:PARAM[vot:VALUES/vot:OPTION]" mode="build-inputs"
             priority="100">
         <xsl:call-template name="format-an-input-key">
-            <xsl:with-param name="key">
-                <xsl:value-of select="@name"/>
-            </xsl:with-param>
             <xsl:with-param name="typedesc"
                 >Select zero, one, or possibly more options</xsl:with-param>
             <xsl:with-param name="widget">
@@ -330,15 +311,6 @@ http://www.gnu.org/licenses/gpl.html to learn about your rights.
                     <xsl:apply-templates select="vot:VALUES" 
                         mode="build-inputs"/>
                 </select>
-            </xsl:with-param>
-            <xsl:with-param name="description">
-                <xsl:value-of select="vot:DESCRIPTION"/>
-            </xsl:with-param>
-            <xsl:with-param name="ucd">
-                <xsl:value-of select="@ucd"/>
-            </xsl:with-param>
-            <xsl:with-param name="unit">
-                <xsl:value-of select="@unit"/>
             </xsl:with-param>
         </xsl:call-template>
     </xsl:template>
@@ -365,9 +337,6 @@ http://www.gnu.org/licenses/gpl.html to learn about your rights.
     <xsl:template match="vot:PARAM[vot:VALUES/vot:MIN]" mode="build-inputs"
             priority="50">
         <xsl:call-template name="format-an-input-key">
-            <xsl:with-param name="key">
-                <xsl:value-of select="@name"/>
-            </xsl:with-param>
             <xsl:with-param name="typedesc"
                 >A value between
                 <span class="limit">
@@ -386,15 +355,6 @@ http://www.gnu.org/licenses/gpl.html to learn about your rights.
                         <xsl:value-of select="vot:VALUES/vot:MIN/@value"/>
                     </xsl:attribute>
                 </input>
-            </xsl:with-param>
-            <xsl:with-param name="description">
-                <xsl:value-of select="vot:DESCRIPTION"/>
-            </xsl:with-param>
-            <xsl:with-param name="ucd">
-                <xsl:value-of select="@ucd"/>
-            </xsl:with-param>
-            <xsl:with-param name="unit">
-                <xsl:value-of select="@unit"/>
             </xsl:with-param>
         </xsl:call-template>
     </xsl:template>
@@ -517,6 +477,8 @@ http://www.gnu.org/licenses/gpl.html to learn about your rights.
             width:20em;
         }
     	</style>
+    	<script type="text/javascript" 
+    	  src="http://dc.g-vo.org/static/js/jquery-gavo.js"/>
     	</head>
     	<body>
     	<xsl:apply-templates/>
