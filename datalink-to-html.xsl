@@ -218,6 +218,13 @@ http://www.gnu.org/licenses/gpl.html to learn about your rights.
    
         Also, there's a common template for assembling the tree fragments
         that should be used for consistency if at all possible.
+
+        Regrettably, XSLT1 apparently cannot meaningfully pass tree fragments
+        in template parameters (11.1: "An operation is permitted on a result 
+        tree fragment only if that operation would be permitted on a string").
+        Hence, we have this incredibly clumsy interface to the 
+        format-an-input-key template.  If anyone knows a hack to work around
+        this, you're most welcome.
     -->
 
     <xsl:template name="format-an-input-key">
@@ -225,17 +232,26 @@ http://www.gnu.org/licenses/gpl.html to learn about your rights.
         <xsl:param name="typedesc"/>
         <xsl:param name="widget"/>
         <xsl:param name="description"/>
-        <dt>
-            <span class="param-name"><xsl:copy-of select="$key"/></span>
-            <xsl:text> </xsl:text>
-            <span class="typedesc"><xsl:copy-of select="$typedesc"/></span>
-        </dt>
-        <dd>
-            <p class="widget"><xsl:copy-of select="$widget"/></p>
+        <xsl:param name="unit"/>
+        <xsl:param name="ucd"/>
+        <div>
+            <xsl:attribute name="class">
+                <xsl:value-of select="concat('input ', $key, '-', 
+                    $unit, '-', $ucd)"/>
+            </xsl:attribute>
+            <p class="input-header">
+                <span class="param-name"><xsl:copy-of select="$key"/></span>
+                <xsl:text> </xsl:text>
+                <span class="typedesc"><xsl:copy-of select="$typedesc"/></span>
+            </p>
+            <p class="widget">
+                <xsl:copy-of select="$widget"
+                    />&#xa0;<span class="unit">
+                <xsl:copy-of select="$unit"/></span></p>
             <p class="param-description">
                 <xsl:copy-of select="$description"/>
             </p>
-        </dd>
+        </div>
     </xsl:template>
 
     <!-- params with a value always become hidden -->
@@ -285,6 +301,12 @@ http://www.gnu.org/licenses/gpl.html to learn about your rights.
             <xsl:with-param name="description">
                 <xsl:value-of select="vot:DESCRIPTION"/>
             </xsl:with-param>
+            <xsl:with-param name="ucd">
+                <xsl:value-of select="@ucd"/>
+            </xsl:with-param>
+            <xsl:with-param name="unit">
+                <xsl:value-of select="@unit"/>
+            </xsl:with-param>
         </xsl:call-template>
     </xsl:template>
 
@@ -311,6 +333,12 @@ http://www.gnu.org/licenses/gpl.html to learn about your rights.
             </xsl:with-param>
             <xsl:with-param name="description">
                 <xsl:value-of select="vot:DESCRIPTION"/>
+            </xsl:with-param>
+            <xsl:with-param name="ucd">
+                <xsl:value-of select="@ucd"/>
+            </xsl:with-param>
+            <xsl:with-param name="unit">
+                <xsl:value-of select="@unit"/>
             </xsl:with-param>
         </xsl:call-template>
     </xsl:template>
@@ -361,6 +389,12 @@ http://www.gnu.org/licenses/gpl.html to learn about your rights.
             </xsl:with-param>
             <xsl:with-param name="description">
                 <xsl:value-of select="vot:DESCRIPTION"/>
+            </xsl:with-param>
+            <xsl:with-param name="ucd">
+                <xsl:value-of select="@ucd"/>
+            </xsl:with-param>
+            <xsl:with-param name="unit">
+                <xsl:value-of select="@unit"/>
             </xsl:with-param>
         </xsl:call-template>
     </xsl:template>
@@ -458,13 +492,16 @@ http://www.gnu.org/licenses/gpl.html to learn about your rights.
             padding-left: 0.5ex;
         }
 
-        form.service-interface dt {
+        form.service-interface div.input {
             border-top: 1pt solid #DDDD88;
+            margin-left: 1em;
         }
 
         .param-name {
             font-weight: bold;
             font-size: 130%;
+            margin-left: -1em;
+            margin-right: 0.5em;
         }
 
         .typedesc {
@@ -477,7 +514,7 @@ http://www.gnu.org/licenses/gpl.html to learn about your rights.
         }
 
         input.interval-input {
-            width:40em;
+            width:20em;
         }
     	</style>
     	</head>
