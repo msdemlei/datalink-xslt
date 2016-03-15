@@ -154,7 +154,7 @@ http://www.gnu.org/licenses/gpl.html to learn about your rights.
             <xsl:when test="$file-size&lt;1500000000">
                 <xsl:value-of select="round($file-size div 10485.76) div 100"
                     /> MiB</xsl:when>
-            <xsl:when test="$file-size&lt;20e9">
+            <xsl:when test="$file-size&lt;20000000000">
                 <xsl:value-of select="round($file-size div 10737418.24) div 100"
                     /> GiB</xsl:when>
             <xsl:otherwise>
@@ -186,7 +186,7 @@ http://www.gnu.org/licenses/gpl.html to learn about your rights.
 
     <!-- ################################### service interface -->
 
-    <xsl:template match="vot:RESOURCE" utype="adhoc:service">
+    <xsl:template match="vot:RESOURCE[@utype='adhoc:service']">
         <xsl:if test="vot:PARAM[@name='standardID']/@value=
            'ivo://ivoa.net/std/SODA#sync-1.0'">
             <form class="service-interface" method="GET">
@@ -233,7 +233,7 @@ http://www.gnu.org/licenses/gpl.html to learn about your rights.
         <div>
             <xsl:attribute name="class">
                 <xsl:value-of select="concat('input ', @name, '-', 
-                    @unit, '-', @ucd)"/>
+                    @unit, '-', translate(@ucd, '.', '_'))"/>
             </xsl:attribute>
             <p class="input-header">
                 <span class="param-name"><xsl:value-of select="@name"/></span>
@@ -271,11 +271,11 @@ http://www.gnu.org/licenses/gpl.html to learn about your rights.
             <xsl:with-param name="typedesc">An interval 
                 (space-separated pair of numbers),
                 where the limits have to be between
-                <span class="limit">
+                <span class="low-limit">
                     <xsl:value-of select="vot:VALUES/vot:MIN/@value"/>
                 </span>
                 and
-                <span class="limit">
+                <span class="high-limit">
                     <xsl:value-of select="vot:VALUES/vot:MAX/@value"/>
                 </span>
             </xsl:with-param>
@@ -381,7 +381,7 @@ http://www.gnu.org/licenses/gpl.html to learn about your rights.
     	<html>
     	<head>
     	<title>Datalink response</title>
-    	<style type="text/css">
+    	<style type="text/css"><![CDATA[
     	  table {
     	      border-spacing: 0pt;
     	      border-collapse: collapse;
@@ -475,13 +475,40 @@ http://www.gnu.org/licenses/gpl.html to learn about your rights.
 
         input.interval-input {
             width:20em;
-        }
+        } ]]>
     	</style>
     	<script type="text/javascript" 
-    	  src="http://dc.g-vo.org/static/js/jquery-gavo.js"/>
+    	  src="http://localhost:8080/static/js/jquery-gavo.js"/>
+      <script type="text/javascript"
+        src="http://localhost:8080/static/js/sodapars.js"/>
     	</head>
     	<body>
     	<xsl:apply-templates/>
+
+    	<script type="text/html" id="fancy-band-widget">
+        <div class="input custom-BAND">
+            <p class="input-header">
+                <span class="param-name">BAND</span>
+                <span class="typedesc">Enter the spectral range you want
+                to cut out in your preferred units</span>
+            </p>
+            <p class="widget">
+                <input type="text" name="BAND-low"/>
+                <span class="low-limit">$low_limit</span>
+                <input type="text" name="BAND-high"/>
+                <span class="high-limit">$high_limit</span>
+                <select name="BAND-unit"
+                    onchange="convert_spectral_units(
+                        this, $low_limit, $high_limit)">
+                    <option>m</option>
+                    <option>µm</option>
+                    <option>Ångstrøm</option>
+                    <option>MHz</option>
+                    <option>keV</option>
+                </select>
+            </p>
+        </div>
+    	</script>
     	</body>
     	</html>
     </xsl:template>

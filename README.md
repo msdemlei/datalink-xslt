@@ -19,3 +19,8 @@ pieces of metadata.  Grouping, perhaps?  Folding in of categories?
 should be made more configurable.  As should be general appearance.
 I guess we should pull out the root template and tell users to simply
 write that.
+
+(4) We're not checking if there's multiple datasets described in the
+response.  While something would come out of the XSLT even in that case,
+its utility would be questionable, and so we should really do something
+if we detect multiple ids.
