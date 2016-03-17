@@ -241,10 +241,11 @@ function add_POS_widget() {
 		ra_widget.parent().prepend(new_widget);
 		new_widget.show();
 
+		var fov = (phys_width<phys_height) ? phys_height : phys_width;
 		var image_url =	"http://alasky.u-strasbg.fr/cgi/hips-thumbnails/thumbnail"
 				+"?ra="+(low_ra+phys_width/2)
 				+"&dec="+(low_dec+phys_height/2)
-				+"&fov="+phys_width
+				+"&fov="+fov
 				+"&width="+width
 				+"&height="+height
 				+"&hips=CDS/P/DSS2/color";
