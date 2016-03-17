@@ -47,32 +47,33 @@ function update_class_elements(container, clsid, val) {
 		});
 }
 
-// returns a function to perform the conversion from custom UI to SODA
-// parameters for par_name -- el is the widget's div, conversions is the unit
-// conversion.  This needs input fields <par_name>-low, <par_name>-high,
-// and <par_name>-unit
-function make_submission_converter(el, old_widget,
-		conversions, par_name) {
-	return function() {
-		var converter = conversions[this[par_name+"-unit"].value];
+// update a SODA (interval) widget for par name form a -low/-high/-unit
+// split widget.
+// soda_name is the name of the SODA parameter to be built.  conversions
+// is a mapping going from -unit strings to converter functions to
+// the SODA units.
+function update_SODA_widget(input, soda_name, conversions) {
+	var form = input.form;
+	var low_element = form[soda_name+"-low"];
+	var high_element = form[soda_name+"-high"];
+	var unit_element = form[soda_name+"-unit"];
+	var converter = conversions[unit_element.value];
 
-		var low_val = this[par_name+"-low"].value;
-		if (low_val) {
-			low_val = converter(parseFloat(low_val));
-		} else {
-			low_val = '-Inf';
-		}
-
-		var high_val = this[par_name+"-high"].value;
-		if (high_val) {
-			high_val = converter(parseFloat(high_val));
-		} else {
-			high_val = '+Inf';
-		}
-
-		this["BAND"].value = low_val+" "+high_val;
-		$(this).find(".inputpars").find(".custom-BAND").remove()
+	var low_val = low_element.value;
+	if (low_val) {
+		low_val = converter(parseFloat(low_val));
+	} else {
+		low_val = '-Inf';
 	}
+
+	var high_val = high_element.value;
+	if (high_val) {
+		high_val = converter(parseFloat(high_val));
+	} else {
+		high_val = '+Inf';
+	}
+
+	form[soda_name].value = low_val+" "+high_val;
 }
 
 
@@ -189,7 +190,7 @@ function convert_spectral_units(el, low, high) {
 
 /////////////////// Individual widgets
 
-function replace_BAND_widget() {
+function add_BAND_widget() {
 	var old = $(".BAND-m-em_wl");
 	old.map(function(index, el) {
 		el = $(el);
@@ -203,16 +204,14 @@ function replace_BAND_widget() {
 				low_limit: low_limit,
 				high_limit: high_limit});
 		el.parent().prepend(new_widget);
-		el.hide();
 
-	form.submit(
-			make_submission_converter(
-				new_widget, el, FROM_SPECTRAL_CONVERSIONS, "BAND"));
+		form.submit(
+			function() {new_widget.remove();});
 	});
 }
 
 
-function replace_POS_widget() {
+function add_POS_widget() {
 	var ra_widget = $(".RA-deg-pos_eq_ra").first();
 	var dec_widget = $(".DEC-deg-pos_eq_dec").first();
 	
@@ -249,10 +248,10 @@ function replace_POS_widget() {
 				+"&width="+width
 				+"&height="+height
 				+"&hips=CDS/P/DSS2/color";
-/*		$(new_widget).find("img").attr({
+		$(new_widget).find("img").attr({
 			src: image_url,
 			width: width,
-			height: height});*/
+			height: height});
 
 		Rubberband($(new_widget).find("canvas")[0], 
 			ra_widget.find("input"), 
@@ -265,8 +264,8 @@ function replace_POS_widget() {
 // (this is called from the document's ready handler and thus is the
 // main entry point into the magic here)
 function replace_known_widgets() {
-	replace_BAND_widget();
-	replace_POS_widget();
+	add_BAND_widget();
+	add_POS_widget();
 }
 
 

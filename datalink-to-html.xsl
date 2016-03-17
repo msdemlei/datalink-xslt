@@ -529,13 +529,16 @@ http://www.gnu.org/licenses/gpl.html to learn about your rights.
                 to cut out in your preferred units</span>
             </p>
             <p class="widget">
-                <input type="text" name="BAND-low"/>
+                <input type="text" name="BAND-low"
+                  onchange="update_SODA_widget(this, 'BAND', FROM_SPECTRAL_CONVERSIONS)"/>
                 <span class="low-limit">$low_limit</span>
-                <input type="text" name="BAND-high"/>
+                <input type="text" name="BAND-high"
+                  onchange="update_SODA_widget(this, 'BAND', FROM_SPECTRAL_CONVERSIONS)"/>
                 <span class="high-limit">$high_limit</span>
                 <select name="BAND-unit"
                     onchange="convert_spectral_units(
-                        this, $low_limit, $high_limit)">
+                      this, $low_limit, $high_limit);
+                      update_SODA_widget(this, 'BAND', FROM_SPECTRAL_CONVERSIONS)">
                     <option>m</option>
                     <option>µm</option>
                     <option>Ångstrøm</option>
