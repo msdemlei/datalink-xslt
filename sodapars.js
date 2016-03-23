@@ -98,20 +98,20 @@ function Rubberband(canvas,
 	ctx.strokeStyle = "red";
 	ctx.lineWidth = 1;
 
-	function make_limits(lim1, lim2, transform) {
+	function make_limits(lim1, lim2) {
 		if (lim1>lim2) {
 			var tmp = lim1;
 			lim1 = lim2;
-			lim2 = lim1;
+			lim2 = tmp;
 		}
-		return transform(lim1)+" "+transform(lim2);
+		return lim1+" "+lim2;
 	}
 			
 	self.to_ra = function(pix_val) {
-		return low_ra+pix_val/(1.0*canvas_width)*phys_width;
+		return high_ra-pix_val/(1.0*canvas_width)*phys_width;
 	}
 	self.to_dec = function(pix_val) {
-		return low_dec+pix_val/(1.0*canvas_height)*phys_height;
+		return high_dec-pix_val/(1.0*canvas_height)*phys_height;
 	}
 
 	self.start_rubberband = function(e) {
@@ -134,13 +134,14 @@ function Rubberband(canvas,
 		if (self.width==0) {
 			ra_widget.val("");
 		} else {
-			ra_widget.val(make_limits(self.x, self.x+self.width, self.to_ra));
+			ra_widget.val(make_limits(
+				self.to_ra(self.x), self.to_ra(self.x+self.width)));
 		}
 		if (self.height==0) {
 			dec_widget.val("");
 		} else {
 			dec_widget.val(make_limits(
-				self.y, self.y+self.height, self.to_dec));
+				self.to_dec(self.y), self.to_dec(self.y+self.height)));
 		}
 	}
 
@@ -378,6 +379,7 @@ function connect_and_send_SAMP(samp_button, cur_form) {
 function enable_SAMP_on_form(index, cur_form) {
 	try {
 		var samp_button = $("#samp-template").clone()[0]
+		$(samp_button).show()
 		$(samp_button).attr({"id": ""});
 		$(cur_form).prepend(samp_button);
 		$(samp_button).click(function (e) {
