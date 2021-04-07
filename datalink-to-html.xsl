@@ -6,18 +6,18 @@
 Assumptions on document content beyond conforming datalink content:
 
 (1) null value of content_length is -1
-(2) VOTable namespace is 1.2 (as long as you know what version you're handing
+(2) VOTable namespace is 1.3 (as long as you know what version you're handing
     out, just fix xmlns:vot below)
 
 
-Copyright 2015 The GAVO Project, Moenchhofstr. 12-14, D-69120 Heidelberg;
-This code can be used under the GNU GPL; see 
-http://www.gnu.org/licenses/gpl.html to learn about your rights.
+This stylesheet is made available under CC-0 by the GAVO project,
+http://www.g-vo.org.  
+See http://creativecommons.org/publicdomain/zero/1.0/ for details.
 -->
 
 
 <xsl:stylesheet
-    xmlns:vot="http://www.ivoa.net/xml/VOTable/v1.2"
+    xmlns:vot="http://www.ivoa.net/xml/VOTable/v1.3"
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
    	xmlns="http://www.w3.org/1999/xhtml"
     version="1.0">
@@ -72,21 +72,23 @@ http://www.gnu.org/licenses/gpl.html to learn about your rights.
     <!-- ################################### links table -->
     
     <xsl:template match="vot:RESOURCE[@type='results']">
-        <h1>Table links</h1>
         <xsl:call-template name="fetch_preview"/>
         <xsl:apply-templates/>
     </xsl:template>
 
     <xsl:template match="vot:TABLEDATA">
       <table class="links">
+        <thead>
         <tr><th>Where?</th><th>Description</th><th>What?</th></tr>
+        </thead>
+        <tbody>
         <xsl:apply-templates/>
+        </tbody>
       </table>
     </xsl:template>
 
     <xsl:template name="normal_row">
-        <!-- a datalink table row not requring extra processing
-        (e.g., not #access) -->
+        <!-- a datalink table row not requring extra processing -->
         <tr>
         <xsl:attribute name="class">
             <xsl:value-of select="substring(vot:TD[$semantics_index], 2)"/>
@@ -98,6 +100,8 @@ http://www.gnu.org/licenses/gpl.html to learn about your rights.
                 mode="content_length"/>
             <xsl:apply-templates select="vot:TD[$error_message_index]"
                 mode="error_message"/>
+            <xsl:apply-templates select="vot:TD[$service_def_index]"
+                mode="proc_ref"/>
         </td>
         <td>
             <xsl:apply-templates select="vot:TD[$description_index]"
@@ -114,14 +118,9 @@ http://www.gnu.org/licenses/gpl.html to learn about your rights.
     </xsl:template>
 
     <xsl:template match="vot:TR">
-        <xsl:choose>
-            <xsl:when test="vot:TD[$semantics_index]='#access'">
-            <!-- services not formatted so far -->
-            </xsl:when>
-            <xsl:otherwise>
-                <xsl:call-template name="normal_row"/>
-            </xsl:otherwise>
-        </xsl:choose>
+      <!-- this intermediate template is for when we want to switch
+      to different templates for errors and services -->
+      <xsl:call-template name="normal_row"/>
     </xsl:template>
 
     <xsl:template match="vot:TD" mode="id">
@@ -151,13 +150,13 @@ http://www.gnu.org/licenses/gpl.html to learn about your rights.
             <xsl:when test="$file-size&lt;2000">
                 <xsl:value-of select="$file-size"/> Bytes</xsl:when>
             <xsl:when test="$file-size&lt;1500000">
-                <xsl:value-of select="round($file-size div 102.4) div 10"
+                <xsl:value-of select="round($file-size div 1024)"
                     /> kiB</xsl:when>
             <xsl:when test="$file-size&lt;1500000000">
-                <xsl:value-of select="round($file-size div 10485.76) div 100"
+                <xsl:value-of select="round($file-size div 1048576)"
                     /> MiB</xsl:when>
             <xsl:when test="$file-size&lt;20000000000">
-                <xsl:value-of select="round($file-size div 10737418.24) div 100"
+                <xsl:value-of select="round($file-size div 1073741824)"
                     /> GiB</xsl:when>
             <xsl:otherwise>
                 <xsl:value-of select="$file-size"/> Bytes</xsl:otherwise>
@@ -182,6 +181,15 @@ http://www.gnu.org/licenses/gpl.html to learn about your rights.
         </xsl:if>
     </xsl:template>
 
+    <xsl:template match="vot:TD" mode="proc_ref">
+        <xsl:if test="string(.)">
+            <a class="procref">
+                    <xsl:attribute name="href"
+                      >#<xsl:value-of select="."/></xsl:attribute>
+                (Form)</a>
+        </xsl:if>
+    </xsl:template>
+
     <xsl:template match="vot:TD" mode="description">
             <p class="description">
                     <xsl:value-of select="."/>
@@ -196,6 +204,9 @@ http://www.gnu.org/licenses/gpl.html to learn about your rights.
             <form class="service-interface" method="GET">
                 <xsl:attribute name="action">
                     <xsl:value-of select="vot:PARAM[@name='accessURL']/@value"/>
+                </xsl:attribute>
+                <xsl:attribute name="id">
+                    <xsl:value-of select="@ID"/>
                 </xsl:attribute>
                 <h2>SODA data access</h2>
                 <p>In the parameters below, leave everything you do not
@@ -237,7 +248,7 @@ http://www.gnu.org/licenses/gpl.html to learn about your rights.
         <div>
             <xsl:attribute name="class">
                 <xsl:value-of select="concat('input ', @name, '-', 
-                    @unit, '-', translate(@ucd, '.', '_'))"/>
+                    @unit, '-', translate(@ucd, '.;', '__'))"/>
             </xsl:attribute>
             <p class="input-header">
                 <span class="param-name"><xsl:value-of select="@name"/></span>
@@ -254,7 +265,32 @@ http://www.gnu.org/licenses/gpl.html to learn about your rights.
         </div>
     </xsl:template>
 
-    <!-- params with a value always become hidden -->
+    <!-- circles and polygons get seeded with the max values -->
+
+    <xsl:template match="vot:PARAM[@xtype='polygon' or @xtype='circle']" 
+        mode="build-inputs" priority="250">
+      <xsl:call-template name="format-an-input-key">
+         <xsl:with-param name="typedesc">A shape on the sky
+             (space-separated numbers in degrees). Maximum extent:
+             <span class="high-limit">
+                 <xsl:value-of select="vot:VALUES/vot:MAX/@value"/>
+             </span>
+         </xsl:with-param>
+         <xsl:with-param name="widget">
+             <input type="text" class="soda dw-input">
+                 <xsl:attribute name="name">
+                     <xsl:value-of select="@name"/>
+                 </xsl:attribute>
+                 <xsl:attribute name="placeholder">
+                     <xsl:value-of select="vot:VALUES/vot:MAX/@value"/>
+                 </xsl:attribute>
+             </input>
+         </xsl:with-param>
+       </xsl:call-template>
+    </xsl:template>
+
+    <!-- params with a value always become hidden 
+      (TODO: but we should make them editable if there's VALUES on them) -->
     <xsl:template match="vot:PARAM[@value!='']" mode="build-inputs"
             priority="200">
         <input type="hidden" class="soda">
@@ -525,7 +561,61 @@ http://www.gnu.org/licenses/gpl.html to learn about your rights.
 
         input.interval-input {
             width:20em;
-        } ]]>
+        }
+
+        /* formatting the javascript-morphed result tree */
+        h2.voc-label {
+          margin-bottom: 2pt;
+          margin-top: 1ex;
+          font-size: 120%;
+          position: relative;
+        }
+        p.voc-description {
+          margin-top: 0pt;
+          margin-top: 0.5ex;
+          padding-left: 2em;
+          font-style: italic;
+        }
+        button.toggler {
+          position:relative;
+          border: 0px solid white;
+          padding: 0pt;
+          margin-right: 4pt;
+          font-size: 140%;
+          background-color: #fde;
+        }
+        .foldable header {
+          padding: 3pt;
+        }
+        .folded {
+          border-bottom: 2pt dotted #dab;
+        }
+        section.foldable {
+          background-color: #fde;
+          margin-top:0pt;
+          padding-bottom:8pt;
+        }
+        section.foldable ul {
+          margin-left: 2em;
+          margin-bottom: 0pt;
+          list-style-type: none;
+        }
+        section.foldable ul li {
+          background-color: #fef;
+          margin-bottom: 8pt;
+          margin-right: 8pt;
+          padding: 1ex;
+        }
+        div.child-terms {
+          margin-left: 2em;
+        }
+
+        li.dl-error {
+          border-left: 4pt dotted #f00;
+          border-right: 4pt dotted #f00;
+          padding: 0pt 4pt;
+        }
+        ]]>
     	</style>
     	<script type="text/javascript" 
     	  src="/static/js/jquery-gavo.js"/>
@@ -536,13 +626,17 @@ http://www.gnu.org/licenses/gpl.html to learn about your rights.
     	</head>
     	<body>
     	  
+    	<div id="aladin-lite-div"
+    	  style="width: 100%; height:10cm; 
+    	    display:block;display:none">
+		  </div>
 
     	<xsl:apply-templates/>
 
     	<script type="text/html" id="fancy-band-widget">
         <div class="input custom-BAND">
             <p class="input-header">
-                <span class="param-name">BAND</span>
+                <span class="param-name">Spectral range</span>
                 <span class="typedesc">Enter the spectral range you want
                 to cut out in your preferred units</span>
             </p>
@@ -567,22 +661,43 @@ http://www.gnu.org/licenses/gpl.html to learn about your rights.
         </div>
     	</script>
 
-      <!-- I have no idea why this is, but when I do the following two with
-      a text/html template, I can't attach event handlers to them.
+      <!-- a template is for the js-based links browser
+      (see _morph_table) -->
+    	<script type="text/html" id="links-for-ds">
+    	  <section class="morphed-links">
+    	  <h1>Links for <span class="ivoid">$ivoid</span></h1>
+    	  </section>
+    	</script>
+      
+      <!-- a template for a single term in the js-created links -->
+      <script type="text/html" id="term-section">
+        <section class="foldable $term">
+          <header>
+          <h2 class="voc-label">$label</h2>
+          <p class="voc-description">$description</p>
+          </header>
+        </section>
+      </script>
+
+      <!-- a template for a single datalink row -->
+      <script type="text/html" id="js-datalink">
+        <li><a href="$link">$description</a>
+        <span class="linksize">$size</span>
+        </li>
+      </script>
+
+      <!-- a template for a datalink error -->
+      <script type="text/html" id="js-datalinkerror">
+        <li class="dl-error">$errmsg</li>
+      </script>
+
+      <!-- I have no idea why this is, but when I do the following with
+      a text/html template, I can't attach event handlers to it.
       Cross browser.  Sigh. -->
 
       <button id="samp-template" title="Broadcasts the result as a FITS image
           to all connected clients (if you have a WebSAMP-enabled
           hub running" style="display:none">Broadcast dataset via SAMP</button>
-
-      <div id="pos-template" class="input custom-POS"
-        style="display:none">
-        <img class="pos-background" src=""/>
-        <canvas class="pos-canvas" width="300" height="300"/>
-        <br/>
-        <caption>Click-and-drag here to interactively set 
-        a spatial cutout</caption>
-      </div>
 
     	</body>
     	</html>

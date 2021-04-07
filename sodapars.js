@@ -1,9 +1,17 @@
 // Javascript for custom widgets for standard SODA parameters, and
-// other JS support for the improvised soda interface.
+// other JS support for the improvised datalink interface.
 // See https://github.com/msdemlei/datalink-xslt.git
 //
 // The needs jquery loaded before it.
+//
+// Distributed by the GAVO project under Creative Commons CC0,
+// see http://creativecommons.org/publicdomain/zero/1.0/
 
+
+// This may need adaptation on non-DaCHS deploments
+const ALADIN_CSS = "/3rdparty/aladin.min.css";
+const ALADIN_JS = "/3rdparty/aladin.min.js";
+const FOOTPRINT_JS = "/static/js/footprintedit.js";
 
 ///////////// Micro templating.  
 /// See http://docs.g-vo.org/DaCHS/develNotes.html#built-in-templating
@@ -13,15 +21,15 @@ function htmlEscape(str) {
 		.replace(/>/g, '&gt;');
 }
 
-(function () {
+let renderTemplate = function () {
 	var _tmplCache = {};
-	this.renderTemplate = function (templateId, data) {
+	let renderTemplate = function (templateId, data) {
 		var err = "";
 		var func = _tmplCache[templateId];
 		if (!func) {
-			str = document.getElementById(templateId).innerHTML;
-			var strFunc =
-				"var p=[],print=function(){p.push.apply(p,arguments);};"
+			let str = document.getElementById(templateId).innerHTML;
+			let strFunc =
+				"let p=[],print=function(){p.push.apply(p,arguments);};"
 				+ "with(obj){p.push('"
 				+ str.replace(/[\r\t\n]/g, " ")
 				.split("'").join("\\'")
@@ -34,7 +42,8 @@ function htmlEscape(str) {
 		}
 		return func(data);
 	}
-})()
+	return renderTemplate;
+}()
 
 
 /////////////////// misc. utils
@@ -77,105 +86,13 @@ function update_SODA_widget(input, soda_name, conversions) {
 }
 
 
-/////////////////// Rubber band for 2D selection
-
-function Rubberband(canvas,
-		ra_widget, dec_widget, 
-		low_ra, high_ra, low_dec, high_dec,
-		canvas_width, canvas_height) {
-	var self = {};
-	self.x = 0;
-	self.y = 0;
-	self.width = 0;
-	self.height = 0;
-
-	var phys_width = high_ra-low_ra;
-	var phys_height = high_dec-low_dec;
-
-	var canvas = canvas
-	var ctx = canvas.getContext("2d");
-	var bg_store = ctx.getImageData(0, 0, canvas.width, canvas.height);
-	ctx.strokeStyle = "red";
-	ctx.lineWidth = 1;
-
-	function make_limits(lim1, lim2) {
-		if (lim1>lim2) {
-			var tmp = lim1;
-			lim1 = lim2;
-			lim2 = tmp;
-		}
-		return lim1+" "+lim2;
-	}
-			
-	self.to_ra = function(pix_val) {
-		return high_ra-pix_val/(1.0*canvas_width)*phys_width;
-	}
-	self.to_dec = function(pix_val) {
-		return high_dec-pix_val/(1.0*canvas_height)*phys_height;
-	}
-
-	// workaround for missing offsetX/Y in firefox (why doesn't jquery fix
-	// this?); e is a jquery event
-	self._computeOffsets = function(e) {
-		if (e.offsetX==undefined) {
-			e.offsetX = e.pageX - $(e.target).offset().left;
-		}
-		if (e.offsetY==undefined) {
-			e.offsetY = e.pageY - $(e.target).offset().top;
-		}
-	}
-
-	self.start_rubberband = function(e) {
-		e.preventDefault();
-		self._computeOffsets(e);
-		self.x = e.offsetX;
-		self.y = e.offsetY;
-		$(canvas).mousemove(self.update_rubberband);
-		$(canvas).mouseup(self.finish_rubberband);
-		self.update_rubberband(e);
-	}
-	
-	self.update_rubberband = function(e) {
-		e.preventDefault();
-		self._computeOffsets(e);
-		var rel_x = e.offsetX;
-		var rel_y = e.offsetY;
-		self.width = rel_x-self.x;
-		self.height = rel_y-self.y;
-		ctx.putImageData(bg_store, 0, 0);
-		ctx.strokeRect(self.x, self.y, self.width, self.height);
-		if (self.width==0) {
-			ra_widget.val("");
-		} else {
-			ra_widget.val(make_limits(
-				self.to_ra(self.x), self.to_ra(self.x+self.width)));
-		}
-		if (self.height==0) {
-			dec_widget.val("");
-		} else {
-			dec_widget.val(make_limits(
-				self.to_dec(self.y), self.to_dec(self.y+self.height)));
-		}
-	}
-
-	self.finish_rubberband = function(e) {
-		e.preventDefault();
-		$(canvas).unbind("mousemove");
-		$(canvas).unbind("mouseup");
-	}
-
-	$(canvas).mousedown(self.start_rubberband);
-
-	return self;
-}
-
 /////////////////// Unit conversion
 
-LIGHT_C = 2.99792458e8;
-PLANCK_H_EV = 4.135667662e-15;
+let LIGHT_C = 2.99792458e8;
+let PLANCK_H_EV = 4.135667662e-15;
 
 // conversions from meters to
-TO_SPECTRAL_CONVERSIONS = {
+let TO_SPECTRAL_CONVERSIONS = {
 	'm': function(val) { return val; },
 	'µm': function(val) { return val*1e6; },
 	'Ångström': function(val) { return val*1e10; },
@@ -183,7 +100,7 @@ TO_SPECTRAL_CONVERSIONS = {
 	'keV': function(val) { return LIGHT_C*PLANCK_H_EV/val*1e-3; }};
 
 // conversions to meters from
-FROM_SPECTRAL_CONVERSIONS = {
+let FROM_SPECTRAL_CONVERSIONS = {
 	'm': function(val) { return val; },
 	'µm': function(val) { return val/1e6; },
 	'Ångström': function(val) { return val/1e10; },
@@ -219,57 +136,55 @@ function add_BAND_widget() {
 				high_limit: high_limit});
 		el.parent().prepend(new_widget);
 	});
+	old.hide();
 }
 
 
-function add_POS_widget() {
-	var ra_widget = $(".RA-deg-pos_eq_ra").first();
-	var dec_widget = $(".DEC-deg-pos_eq_dec").first();
+function _draw_POLYGON_widget(poly_widget) {
+	// A callback to draw the aladin light window once the required
+	// javascript code is loaded are there
+
+	var new_widget = $('#aladin-lite-div').detach();
+	// I'd like to use poly_widget.parent() here, but that silently fails.
+	$('div.inputpars').prepend(new_widget);
+	new_widget.show();
+	new_widget.before("<p>Adjust the cutout region by clicking and dragging"
+		+" the handles.");
+
+	var init_vals = $.map(
+		poly_widget.find(".high-limit").text().split(" "),
+		parseFloat);
+	var init_poly = [];
+	for (var i=0; i<init_vals.length; i+=2) {
+		init_poly.push([init_vals[i], init_vals[i+1]]);
+	}
+	var input = poly_widget.find("input")
+
+	embed_region_editor(
+		document.getElementById("aladin-lite-div"),
+		init_poly,
+		function(poly) {
+			input[0].value = poly.map((p) => `${p[0]} ${p[1]}`).join(" ");
+			});
+}
+
+
+function add_POLYGON_widget() {
+	// An aladin-light-based widget letting people draw polygons to
+	// cut out.  Yes, this is expensive, but it's hard to make something
+	// like this with less tooling and JS madness.
+
+	var poly_widget = $(".POLYGON-deg-phys_argArea_obs");
 	
-	if (ra_widget && dec_widget) {
-		var low_ra = parseFloat(ra_widget.find(".low-limit").text());
-		var high_ra = parseFloat(ra_widget.find(".high-limit").text());
-		var low_dec = parseFloat(dec_widget.find(".low-limit").text());
-		var high_dec = parseFloat(dec_widget.find(".high-limit").text());
-		var phys_width = high_ra-low_ra;
-		var phys_height = high_dec-low_dec;
-
-		var width = 300;
-		var height = Math.round(width/phys_width*phys_height);
-		if (height<5) {
-			height = 5;
-		}
-		if (height>900) {
-			height = 900;
-		}
-
-		var new_widget = $("#pos-template").clone(); 
-		new_widget.attr({
-			id: ""});
-		new_widget.find("canvas").attr({
-			width: width,
-			height: height});
-		ra_widget.parent().prepend(new_widget);
-		new_widget.show();
-
-		var fov = (phys_width<phys_height) ? phys_height : phys_width;
-		var image_url =	"http://alasky.u-strasbg.fr/cgi/hips-thumbnails/thumbnail"
-				+"?ra="+(low_ra+phys_width/2)
-				+"&dec="+(low_dec+phys_height/2)
-				+"&fov="+fov
-				+"&width="+width
-				+"&height="+height
-				+"&hips=CDS/P/DSS2/color";
-//		image_url = "http://dc.g-vo.org/static/img/logo_medium.png";
-		$(new_widget).find("img").attr({
-			src: image_url,
-			width: width,
-			height: height});
-
-		Rubberband($(new_widget).find("canvas")[0], 
-			ra_widget.find("input"), 
-			dec_widget.find("input"), 
-			low_ra, high_ra, low_dec, high_dec, width, height);
+	if (poly_widget.length) {
+		$("head").append(
+			`<link rel='stylesheet' href='${ALADIN_CSS}'`
+				+" type='text/css' />");
+		$.getScript(ALADIN_JS).done(
+		function() {
+			$.getScript(FOOTPRINT_JS).done(
+				function() {_draw_POLYGON_widget(poly_widget);})
+		})
 	}
 }
 
@@ -278,7 +193,7 @@ function add_POS_widget() {
 // main entry point into the magic here)
 function add_custom_widgets() {
 	add_BAND_widget();
-	add_POS_widget();
+	add_POLYGON_widget();
 	// in order to hide the extra inputs from the browser when sending
 	// off the form, we need to override the submit action
 	$("form.service-interface").bind("submit",
@@ -287,6 +202,331 @@ function add_custom_widgets() {
 			window.open(
 				build_result_URL(event.target));
 		});
+}
+
+//////////////////////////// Semantics/link hierarchy builder
+
+// a datalink row, which is constructed with an HTML TR as produced
+// by the XSLT.
+// These have a link (the URL), description, semantics, and dsid
+// (the ivoid).  Semantics strips a leading hash).
+function Datalink(datalink_row) {
+	var tds = datalink_row.querySelectorAll("td");
+
+	if (tds.length<3) {
+		// this is a malformed line (e.g., the header line).  We'll
+		// ignore it
+		return null;
+	}
+
+	this.link = tds[0].querySelector("a.datalink")?.href;
+	this.errmsg = tds[0].querySelector(".errmsg")?.textContent;
+	this.size = tds[0].querySelector(".size")?.textContent || "";
+	this.description = tds[1].textContent;
+	this.dsid = tds[2].querySelector(".ivoid").textContent;
+
+	this.procref = tds[0].querySelector(".procref")?.attributes
+		.href.value || null;
+	if (this.procref?.startsWith("#")) {
+		this.procref = this.procref.slice(1);
+	}
+
+	this.semantics = tds[2].querySelector(".semantics").textContent;
+	if (this.semantics?.startsWith("#")) {
+		this.semantics = this.semantics.slice(1);
+	}
+}
+
+Datalink.prototype = {
+	// renders the datalink container (a jquery object).
+	render: function(container) {
+		// extra handling for services and errors
+		if (this.procref) {
+			let dest_el = document.getElementById(this.procref);
+			if (dest_el) {
+				dest_el.parentElement.removeChild(dest_el);
+				container.append($(dest_el));
+			} else {
+				// the referenced service wasn't rendered into a form.  Let's assume
+				// it's something we can't do anyway (such as async datalink) and
+				// skip it for now.  TODO: think of something less implicit.
+			}
+
+		} else if (this.errmsg) {
+			container.append($(renderTemplate("js-datalinkerror", this)));
+
+		} else {
+			// default action for "normal" datalinks
+			container.append($(renderTemplate("js-datalink", this)));
+		}
+	},
+}
+
+
+// a container for a node in the link tree.
+// These have 
+// * semantics ; the root node has semantics null.
+// * links (An array of Datalinks for the semantics proper in a list)
+// * children (A dict of LinkNodes of narrower resources)
+function LinkNode(semantics) {
+	this.init(semantics);
+}
+
+LinkNode.prototype = {
+	init: function(semantics) {
+		this.semantics = semantics;
+		this.links = [];
+		this.children = {};
+	},
+
+	// Inserts a datalink into the tree using a "trace", the sequence
+	// of node labels from root to the datalink
+	insert_by_trace: function(trace, datalink) {
+		if (trace.length==0) {
+			this.add(datalink);
+		} else {
+			let child_sem = trace.shift();
+			if (! (child_sem in this.children)) {
+				this.add(new LinkNode(child_sem));
+			}
+			this.children[child_sem].insert_by_trace(trace, datalink);
+		}
+	},
+
+	// add a Datalink or a LinkNode to self.
+	add: function(thing) {
+		if (thing instanceof LinkNode) {
+			this._add_child(thing);
+		} else {
+			// be lenient in what we accept as a datalink
+			this._add_link(thing);
+		}
+	},
+
+	// adds a representation of self to the jquery container;
+	// voc is the desise terms from the governing vocabulary.
+	render: function(container, voc) {
+		let voc_meta = voc[this.semantics];
+		if (!voc_meta) {
+			voc_meta = {
+				"label": this.semantics, 
+				"description": "(not in IVOA datalink core)"}
+		}
+
+		let section = $(renderTemplate("term-section", voc_meta));
+		container.append(section);
+
+		let links_container = $("<ul class='links-from-js'/>");
+		section.append(links_container);
+		this.links.forEach(dl => dl.render(links_container));
+		
+		let child_container = $("<div class='child-terms'/>");
+		section.append(child_container);
+		for (child in this.children) {
+			this.children[child].render(child_container, voc);
+		}
+	},
+
+	_add_link: function(datalink) {
+		if (datalink.semantics!=this.semantics) {
+			throw new Error(
+				`Cannot add ${datalink.semantics} link to ${this.semantics}`);
+		} else {
+			this.links.push(datalink);
+		}
+	},
+
+	_add_child: function(link_node) {
+		if (link_node.semantics in this.children) {
+			throw Error(`LinkNode for ${link_node.semantics} already present.`);
+		} else {
+			this.children[link_node.semantics] = link_node;
+		}
+	},
+
+};
+
+
+// the root node is rendered differently from other link nodes, and
+// its semantics is null (which is forbidden otherwise), so there's
+// and extra class for it.
+function RootNode() {
+	this.init(null);
+}
+
+RootNode.prototype = Object.create(LinkNode.prototype);
+
+RootNode.prototype.render = function(container, voc) {
+	// We prescribe a sequence for the most common toplevel terms and
+	// leave the rest to chance for now
+	for (term of [
+			"this",
+			"preview",
+			"proc",
+			"documentation",
+			"auxiliary",
+			"calibration",
+			"coderived",
+			"counterpart",
+			"derviation",
+			"progenitor",]) {
+		if (term in this.children) {
+			this.children[term].render(container, voc);
+			delete this.children[term];
+		}
+	}
+
+	for (child in this.children) {
+		this.children[child].render(container, voc);
+	}
+}
+
+
+// add an out-of-vocabulary datalink (this should only ever be called on
+// the root node).
+RootNode.prototype.add_oov = function(dl) {
+		if (! (dl.semantics in this.children)) {
+			this.children[dl.semantics] = new LinkNode(dl.semantics);
+		}
+		this.children[dl.semantics].add(dl);
+	}
+
+
+
+// A container for all links belonging to a Dataset.  These
+// these are constructed with the dataset identifier, the organising vocabulary
+// (i.e., datalink core for us, most likely), and they contain a link to the
+// root LinkNode.
+function LinksFor(dsid, vocab) {
+	this.dsid = dsid;
+	this.vocab = vocab;
+	this.root = new RootNode();
+}
+
+LinksFor.prototype = {
+	// add another datalink for my dataset
+	add: function(dl) {
+		let sem = this.vocab[dl.semantics];
+		if (!sem) {
+			// special handling for out-of-vocabulary terms
+			this.root.add_oov(dl);
+			return;
+		}
+
+		// now find a trace to a top-level term...
+		let cur_term = dl.semantics;
+		let trace = [];
+		while (cur_term) {
+			trace.push(cur_term);
+			cur_term = this.vocab[cur_term].wider?.pop();
+		}
+
+		trace.reverse();
+
+		// and have LinksFor sort it in
+		this.root.insert_by_trace(trace, dl);
+	},
+
+	// renders the links into the jquery container
+	render: function(container) {
+		let inner = $(renderTemplate("links-for-ds",
+			{"ivoid": this.dsid}));
+		$(container).append(inner);
+		this.root.render(inner, this.vocab);
+	}
+}
+
+
+// returns all datalinks in our document as a mapping 
+// dsid -> list of datalinks
+function get_datalinks() {
+	let result = {};
+	for (tr of document.querySelectorAll(".links tbody tr")) {
+		let dl = new Datalink(tr);
+		if (dl.dsid in result) {
+			result[dl.dsid].push(dl);
+		} else {
+			result[dl.dsid] = [dl];
+		}
+	}
+	return result;
+}
+
+
+// asynchronously load the Datalink vocabulary.
+// This returns the xhr object; add handlers for the load event as required.
+function load_vocabulary() {
+	var xhr = new XMLHttpRequest();
+	xhr.open('GET', "https://ivoa.net/rdf/datalink/core");
+	xhr.setRequestHeader("accept", "application/x-desise+json");
+	xhr.send();
+	return xhr;
+}
+
+
+// morph the links table to our semantics-based tree.
+// This is being used as a success handler for vocabulary loading and
+// should not called otherwise.
+function _morph_table(load_event) {
+	let dlcore = JSON.parse(load_event.currentTarget.responseText)["terms"];
+	let byds = get_datalinks();
+
+	// make a container for the new, hierarchical links;
+	// this will replace the existing flat table at the end of this function.
+	var outer_container = document.createElement("div");
+	outer_container.id = 'links-container';
+	var links_table = document.querySelectorAll("table.links")[0];
+
+	// make trees out of the datalinks and render them
+	for (let dsid in byds) {
+		let cur_links = new LinksFor(dsid, dlcore);
+		for (let dl of byds[dsid]) {
+			cur_links.add(dl);
+		}
+		cur_links.render(outer_container);
+	}
+
+	links_table.parentNode.replaceChild(
+		outer_container, links_table);
+
+	$(".foldable").each((ind, obj) => make_foldable(obj));
+}
+
+// Initiate the morphing of the links table.
+// This just fires off the retrieval of the vocabulary, the actual work
+// being done in that load's event handler.
+function start_table_morphing() {
+	load_vocabulary().addEventListener("load", _morph_table);
+	// we ignore errors here; this just means the table will stand
+	// un-morphed.
+}
+
+
+// helper function for make_foldable
+function _toggle_fold(target) {
+	let jqt = $(target);
+	if (jqt.hasClass("folded")) {
+		jqt.children("ul,div").show();
+		jqt.removeClass("folded");
+		jqt.children("header").find(".toggler").text('▼');
+	} else {
+		jqt.children("ul,div").hide();
+		jqt.addClass("folded");
+		jqt.children("header").find(".toggler").text('▶');
+	}
+}
+
+
+// furnish a section with a handle to fold it in and out,
+// and fold it in.
+function make_foldable(section) {
+	let toggler = $("<button class='toggler'>▼</span>");
+	$(section).find(".voc-label").first().prepend(toggler);
+	$(section).children("header").on("click", _ => _toggle_fold(section));
+
+	if (! section.classList.contains("this")) {
+		_toggle_fold(section);
+	}
 }
 
 
@@ -318,7 +558,7 @@ function make_query_item(form_element, index) {
 	if (! $(form_element).hasClass("soda")) {
 		return;
 	}
-	switch (form_element.nodeName) {
+	switch (form_element.nodeName.toUpperCase()) {
 		case "INPUT":
 		case "TEXTAREA":
 			if (form_element.type=="radio" || form_element.type=="checkbox") {
@@ -353,6 +593,12 @@ function send_SAMP(conn, cur_form) {
 	conn.notifyAll([msg]);
 }
 
+function completeURL(uriOrPath) {
+	if (uriOrPath[0]=="/") {
+		return window.location.protocol+"//"+window.location.host+uriOrPath;
+	}
+	return uriOrPath;
+}
 
 // return the callback for a successful hub connection
 // (which disables-re-registration and sends out the image link)
@@ -360,8 +606,7 @@ function _make_SAMP_success_handler(samp_button, cur_form) {
 	return function(conn) {
 		conn.declareMetadata([{
 			"samp.description": "SODA processed data from"+document.URL,
-			"samp.icon.url": 
-				"http://"+window.location.host+"/static/img/logo_tiny.png"
+			"samp.icon.url": completeURL("/favicon.png")
 		}]);
 
 		// set the button up so clicks send again without reconnection.
@@ -372,7 +617,7 @@ function _make_SAMP_success_handler(samp_button, cur_form) {
 		});
 
 		// make sure we unregister when the user leaves the page
-		$(window).unload(function() {
+		$(window).on("unload", function() {
 			conn.unregister();
 		});
 
@@ -418,3 +663,4 @@ function enable_SAMP() {
 
 $(document).ready(add_custom_widgets);
 $(document).ready(enable_SAMP);
+$(document).ready(start_table_morphing);
