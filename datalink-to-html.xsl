@@ -198,6 +198,16 @@ See http://creativecommons.org/publicdomain/zero/1.0/ for details.
 
     <!-- ################################### service interface -->
 
+    <xsl:template name="add-default">
+      <!-- called on PARAM-s to fiddle out DaCHS-custom LINK #pre-set
+        defaults and set them on the current node. -->
+      <xsl:if test="vot:LINK[@action='rdf' and @content-role='#pre-set']">
+        <xsl:attribute name="value">
+          <xsl:value-of select="vot:LINK/@value"/>
+        </xsl:attribute>
+      </xsl:if>
+    </xsl:template>
+
     <xsl:template match="vot:RESOURCE[@utype='adhoc:service']">
         <xsl:if test="vot:PARAM[@name='standardID']/@value=
            'ivo://ivoa.net/std/SODA#sync-1.0'">
@@ -394,6 +404,7 @@ See http://creativecommons.org/publicdomain/zero/1.0/ for details.
                     <xsl:attribute name="placeholder">
                         <xsl:value-of select="vot:VALUES/vot:MIN/@value"/>
                     </xsl:attribute>
+                    <xsl:call-template name="add-default"/>
                 </input>
             </xsl:with-param>
         </xsl:call-template>
@@ -409,6 +420,7 @@ See http://creativecommons.org/publicdomain/zero/1.0/ for details.
             <xsl:attribute name="name">
               <xsl:value-of select="@name"/>
             </xsl:attribute>
+            <xsl:call-template name="add-default"/>
           </input>
         </xsl:with-param>
       </xsl:call-template>
@@ -627,8 +639,7 @@ See http://creativecommons.org/publicdomain/zero/1.0/ for details.
     	<body>
     	  
     	<div id="aladin-lite-div"
-    	  style="width: 100%; height:10cm; 
-    	    display:block;display:none">
+    	  style="width: 100%; height:10cm; display:none">
 		  </div>
 
     	<xsl:apply-templates/>
