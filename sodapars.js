@@ -164,7 +164,7 @@ function _draw_POLYGON_widget(poly_widget) {
 		document.getElementById("aladin-lite-div"),
 		init_poly,
 		function(poly) {
-			input[0].value = poly.map((p) => `${p[0]} ${p[1]}`).join(" ");
+			input[0].value = poly.map((p) => p[0]+" "+p[1]).join(" ");
 			});
 }
 
@@ -524,7 +524,9 @@ function make_foldable(section) {
 	$(section).find(".voc-label").first().prepend(toggler);
 	$(section).children("header").on("click", _ => _toggle_fold(section));
 
-	if (! section.classList.contains("this")) {
+	if (! (
+			section.classList.contains("this")
+			|| section.classList.contains("proc"))) {
 		_toggle_fold(section);
 	}
 }
