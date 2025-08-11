@@ -24,6 +24,15 @@ Notes:
 Adoption Instructions
 ---------------------
 
+**Dirty Secret Alert:** Regrettably, all major browser engines suck when
+you mix XSLT and Javascript (but perhaps *ready* is just the wrong
+signal to catch for initialisation?).  That is why DaCHS currently
+arranges for client-side application of the stylesheet when it suspects
+it is talking to a browser rather than a proper client.  Somewhat
+surprisingly, this still seems to be necessary 10 years after this
+software was written.  If you can figure out what the actual trouble is,
+do let us know.
+
 You can of course organise the various files differently, but here is a
 run-down of things needed for having your datalinks formatted.
 
@@ -56,6 +65,6 @@ run-down of things needed for having your datalinks formatted.
 
 (8) After all these preparations, simply arrange for::
 
-      <?xml-stylesheet href='X/datalink-to-html.xsl' type='text/xsl'?>  
-    
+      <?xml-stylesheet href='X/datalink-to-html.xsl' type='text/xsl'?>
+
     to be output at the top of your datalink documents.
