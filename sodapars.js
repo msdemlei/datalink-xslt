@@ -13,7 +13,7 @@ const ALADIN_CSS = "/3rdparty/aladin.min.css";
 const ALADIN_JS = "/3rdparty/aladin.min.js";
 const FOOTPRINT_JS = "/static/js/footprintedit.js";
 
-///////////// Micro templating.  
+///////////// Micro templating.
 /// See http://docs.g-vo.org/DaCHS/develNotes.html#built-in-templating
 function htmlEscape(str) {
 	return String(str).replace(/&/g, '&amp;').replace(/"/g, '&quot;')
@@ -264,7 +264,7 @@ Datalink.prototype = {
 
 
 // a container for a node in the link tree.
-// These have 
+// These have
 // * semantics ; the root node has semantics null.
 // * links (An array of Datalinks for the semantics proper in a list)
 // * children (A dict of LinkNodes of narrower resources)
@@ -309,7 +309,7 @@ LinkNode.prototype = {
 		let voc_meta = voc[this.semantics];
 		if (!voc_meta) {
 			voc_meta = {
-				"label": this.semantics, 
+				"label": this.semantics,
 				"description": "(not in IVOA datalink core)"}
 		}
 
@@ -437,7 +437,7 @@ LinksFor.prototype = {
 }
 
 
-// returns all datalinks in our document as a mapping 
+// returns all datalinks in our document as a mapping
 // dsid -> list of datalinks
 function get_datalinks() {
 	let result = {};
@@ -520,7 +520,7 @@ function _toggle_fold(target) {
 // furnish a section with a handle to fold it in and out,
 // and fold it in.
 function make_foldable(section) {
-	let toggler = $("<button class='toggler'>▼</span>");
+	let toggler = $("<button class='toggler'>▼</button>");
 	$(section).find(".voc-label").first().prepend(toggler);
 	$(section).children("header").on("click", _ => _toggle_fold(section));
 
