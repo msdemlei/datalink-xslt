@@ -24,9 +24,7 @@ See http://creativecommons.org/publicdomain/zero/1.0/ for details.
    
     <!-- ############################################## Global behaviour -->
 
-    <xsl:output method="xml" 
-      doctype-public="-//W3C//DTD XHTML 1.0 Strict//EN"
-      doctype-system="http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"/>
+   <xsl:output method="html" encoding="UTF-8" indent="yes"/>
 
     <!-- Don't spill the content of unknown elements. -->
     <xsl:template match="text()"/>
