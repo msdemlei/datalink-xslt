@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- A stylesheet to turn IVOA datalink documents 
+<!-- A stylesheet to turn IVOA datalink documents
 (http://www.ivoa.net/documents/DataLink) into HTML pages.
 
 Assumptions on document content beyond conforming datalink content:
@@ -11,7 +11,7 @@ Assumptions on document content beyond conforming datalink content:
 
 
 This stylesheet is made available under CC-0 by the GAVO project,
-http://www.g-vo.org.  
+http://www.g-vo.org.
 See http://creativecommons.org/publicdomain/zero/1.0/ for details.
 -->
 
@@ -21,12 +21,10 @@ See http://creativecommons.org/publicdomain/zero/1.0/ for details.
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
    	xmlns="http://www.w3.org/1999/xhtml"
     version="1.0">
-   
+
     <!-- ############################################## Global behaviour -->
 
-    <xsl:output method="xml" 
-      doctype-public="-//W3C//DTD XHTML 1.0 Strict//EN"
-      doctype-system="http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"/>
+   <xsl:output method="html" encoding="UTF-8" indent="yes"/>
 
     <!-- Don't spill the content of unknown elements. -->
     <xsl:template match="text()"/>
@@ -68,9 +66,9 @@ See http://creativecommons.org/publicdomain/zero/1.0/ for details.
         name="content_length_index"
         select="count(vot:VOTABLE/vot:RESOURCE[@type='results']/vot:TABLE/
             vot:FIELD[@name='content_length']/preceding::vot:FIELD)+1"/>
-            
+
     <!-- ################################### links table -->
-    
+
     <xsl:template match="vot:RESOURCE[@type='results']">
         <xsl:call-template name="fetch_preview"/>
         <xsl:apply-templates/>
@@ -235,19 +233,19 @@ See http://creativecommons.org/publicdomain/zero/1.0/ for details.
 
     <!-- **vot:PARAM -> html:input translation**: we match with various
         templates and control conflicts through priority.  Please
-        sort rules by descending priority. 
-        
+        sort rules by descending priority.
+
         Priorities >=200 are for protocol-specified cases.
-        Priorities ]100, 200[ are for 3-factor semantics 
-        Priorities <=100 are for heuristics. 
-   
+        Priorities ]100, 200[ are for 3-factor semantics
+        Priorities <=100 are for heuristics.
+
         Also, there's a common template for assembling the tree fragments
         that should be used for consistency if at all possible.
 
         Regrettably, XSLT1 apparently cannot meaningfully pass tree fragments
-        in template parameters (11.1: "An operation is permitted on a result 
+        in template parameters (11.1: "An operation is permitted on a result
         tree fragment only if that operation would be permitted on a string").
-        Hence, we have this incredibly clumsy interface to the 
+        Hence, we have this incredibly clumsy interface to the
         format-an-input-key template.  If anyone knows a hack to work around
         this, you're most welcome.
     -->
@@ -257,7 +255,7 @@ See http://creativecommons.org/publicdomain/zero/1.0/ for details.
         <xsl:param name="widget"/>
         <div>
             <xsl:attribute name="class">
-                <xsl:value-of select="concat('input ', @name, '-', 
+                <xsl:value-of select="concat('input ', @name, '-',
                     @unit, '-', translate(@ucd, '.;', '__'))"/>
             </xsl:attribute>
             <p class="input-header">
@@ -277,7 +275,7 @@ See http://creativecommons.org/publicdomain/zero/1.0/ for details.
 
     <!-- circles and polygons get seeded with the max values -->
 
-    <xsl:template match="vot:PARAM[@xtype='polygon' or @xtype='circle']" 
+    <xsl:template match="vot:PARAM[@xtype='polygon' or @xtype='circle']"
         mode="build-inputs" priority="250">
       <xsl:call-template name="format-an-input-key">
          <xsl:with-param name="typedesc">A shape on the sky
@@ -299,7 +297,7 @@ See http://creativecommons.org/publicdomain/zero/1.0/ for details.
        </xsl:call-template>
     </xsl:template>
 
-    <!-- params with a value always become hidden 
+    <!-- params with a value always become hidden
       (TODO: but we should make them editable if there's VALUES on them) -->
     <xsl:template match="vot:PARAM[@value!='']" mode="build-inputs"
             priority="200">
@@ -318,7 +316,7 @@ See http://creativecommons.org/publicdomain/zero/1.0/ for details.
     <xsl:template match="vot:PARAM[@xtype='interval']" mode="build-inputs"
             priority="100">
         <xsl:call-template name="format-an-input-key">
-            <xsl:with-param name="typedesc">An interval 
+            <xsl:with-param name="typedesc">An interval
                 (space-separated pair of numbers),
                 where the limits have to be between
                 <span class="low-limit">
@@ -358,7 +356,7 @@ See http://creativecommons.org/publicdomain/zero/1.0/ for details.
                     <xsl:attribute name="name">
                         <xsl:value-of select="@name"/>
                     </xsl:attribute>
-                    <xsl:apply-templates select="vot:VALUES" 
+                    <xsl:apply-templates select="vot:VALUES"
                         mode="build-inputs"/>
                 </select>
             </xsl:with-param>
@@ -430,7 +428,7 @@ See http://creativecommons.org/publicdomain/zero/1.0/ for details.
     <!-- ################################### utility, top-level -->
 
     <xsl:template name="fetch_preview">
-        <xsl:variable name="preview_url" 
+        <xsl:variable name="preview_url"
             select="//vot:TR[vot:TD[$semantics_index]='#preview']/vot:TD[$access_url_index]"/>
         <xsl:if test="$preview_url">
             <p><img alt="[PREVIEW]">
@@ -547,7 +545,7 @@ See http://creativecommons.org/publicdomain/zero/1.0/ for details.
             font-size: 100%;
             font-weight: bold;
         }
- 
+
         .pos-canvas {
             position: absolute;
             background-color: none;
@@ -629,15 +627,15 @@ See http://creativecommons.org/publicdomain/zero/1.0/ for details.
         }
         ]]>
     	</style>
-    	<script type="text/javascript" 
+    	<script type="text/javascript"
     	  src="/static/js/jquery-gavo.js"/>
-      <script type="text/javascript" 
+      <script type="text/javascript"
         src="/static/js/samp.js"/>
       <script type="text/javascript"
         src="/static/js/sodapars.js"/>
     	</head>
     	<body>
-    	  
+    	
     	<div id="aladin-lite-div"
     	  style="width: 100%; height:10cm; display:none">
 		  </div>
@@ -679,7 +677,7 @@ See http://creativecommons.org/publicdomain/zero/1.0/ for details.
     	  <h1>Links for <span class="ivoid">$ivoid</span></h1>
     	  </section>
     	</script>
-      
+
       <!-- a template for a single term in the js-created links -->
       <script type="text/html" id="term-section">
         <section class="foldable $term">

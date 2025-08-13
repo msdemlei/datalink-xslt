@@ -21,13 +21,26 @@ function htmlEscape(str) {
 		.replace(/>/g, '&gt;');
 }
 
+function decodeHtmlEntities(str) {
+  const textarea = document.createElement('textarea');
+  textarea.innerHTML = str;
+  return textarea.value;
+}
+
+
 let renderTemplate = function () {
 	var _tmplCache = {};
 	let renderTemplate = function (templateId, data) {
 		var err = "";
 		var func = _tmplCache[templateId];
 		if (!func) {
-			let str = document.getElementById(templateId).innerHTML;
+			let scriptNode = document.getElementById(templateId);
+			let str = Array.from(scriptNode.childNodes)
+                            .map(node => new XMLSerializer().serializeToString(node))
+                            .join("")
+                            .replace(/[\r\t\n]/g, " ");
+
+                       str = decodeHtmlEntities(str);
 			let strFunc =
 				"let p=[],print=function(){p.push.apply(p,arguments);};"
 				+ "with(obj){p.push('"
